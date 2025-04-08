@@ -75,8 +75,9 @@ class ChessianEngine:
         return child_node
 
     def get_result(self, board):
+        our_side = self.board.turn
         if board.is_checkmate():
-            return 1 if board.turn == chess.WHITE else 0
+            return 1 if board.turn == our_side else 0
         elif board.is_stalemate() or board.is_insufficient_material() or board.is_seventyfive_moves() or board.is_fivefold_repetition():
             return 0.5
         else:
