@@ -14,7 +14,7 @@ class Node:
         self.untried_moves = list(board.legal_moves)
 
 class MCTSEngine:
-    def __init__(self, board: chess.Board, evaluator, exploration_constant=10):
+    def __init__(self, board: chess.Board, evaluator, exploration_constant=1.5):
         self.name = "Chessian MCTS"
         self.board = board
         self.evaluator = evaluator
