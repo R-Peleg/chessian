@@ -59,7 +59,7 @@ def test_engine(engine: chess.engine.SimpleEngine, puzzle_csv_path: str, think_t
             else:
                 stats['failure'] += 1
             stats['total'] += 1
-            if stats['total'] >= 20:
+            if stats['total'] >= 50:
                 break
     stats['success_rate'] = stats['success'] / stats['total'] * 100
     return stats
