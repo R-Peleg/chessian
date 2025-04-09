@@ -3,6 +3,9 @@ import sys
 from evaluator import Evaluator
 from random_engine import RandomEngine
 from mcts_engine import MCTSEngine
+from direct_engine import DirectEngine
+from llm_evaluator import LLMEvaluator
+
 
 def main():
     if len(sys.argv) > 1:
@@ -11,11 +14,13 @@ def main():
         mode = 'random'
     board = chess.Board()
     evaluator = Evaluator()
+    llm_evaluator = LLMEvaluator('Qwen/Qwen2.5-0.5B', 'cpu')
     engines = {
-        'random': RandomEngine,
-        'mcts': MCTSEngine
+        'random': RandomEngine(board, evaluator),
+        'mcts': MCTSEngine(board, evaluator),
+        'llm_direct': DirectEngine(board, llm_evaluator),
     }
-    engine = engines.get(mode, RandomEngine)(board, evaluator)
+    engine = engines.get(mode, RandomEngine(board, evaluator))
     
     while True:
         cmd = input().strip()

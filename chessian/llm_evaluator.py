@@ -33,6 +33,7 @@ class LLMEvaluator:
     def evaluate_position(self, board: chess.Board) -> float:
         prompt = LLMEvaluator.board_to_string(board)
         prompt += "\nLet's have a look on the position and have a quick assessment."
+        prompt += "\nWhat the best move here is clearly"
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
         outputs = self.model.generate(inputs['input_ids'], max_length=500)
         response = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
@@ -45,7 +46,7 @@ class LLMEvaluator:
 def main():
     board = chess.Board('8/6k1/2R4p/5p1P/5P1K/6P1/8/r7 w - - 2 58')
     print(LLMEvaluator.board_to_string(board))
-    LLMEvaluator('Qwen/Qwen2.5-0.5B-Instruct', 'cpu').evaluate_position(board)
+    LLMEvaluator('Qwen/Qwen2.5-0.5B', 'cpu').evaluate_position(board)
 
 
 if __name__ == "__main__":
