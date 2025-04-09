@@ -34,6 +34,31 @@ def evaluate_position(board: chess.Board) -> float:
     return max(min(scaled_score, 0.95), -0.95)
 
 
+def sort_moves(board: chess.Board, moves) -> list:
+    """
+    Sort moves based on their type and legality.
+    """
+    moves = list(moves)
+    random.shuffle(moves)
+    def move_score(move: chess.Move) -> float:
+        score = 0
+        if move.promotion:
+            score += 10 + move.promotion * 3
+        if board.is_capture(move):
+            capture_piece = chess.PAWN if board.is_en_passant(move) else board.piece_at(move.to_square).piece_type
+            score += 10 + capture_piece * 3
+        if board.gives_check(move):
+            score += 0.5
+        if board.attackers(not board.turn, move.from_square):
+            score += 0.1
+        if board.attackers(not board.turn, move.to_square) and not board.attackers(board.turn, move.to_square):
+            score -= 0.2
+        return score
+
+    sorted_moves = sorted(moves, key=move_score, reverse=True)
+    return sorted_moves
+
+
 class Node:
     def __init__(self, board, move=None, parent=None):
         self.board = board.copy()
@@ -75,7 +100,8 @@ class ChessianEngine:
 
             # Expansion
             if node.untried_moves != []:
-                move = random.choice(node.untried_moves)
+                moves = sort_moves(board, node.untried_moves)
+                move = random.choice([moves[0]] * 5 + moves)
                 board.push(move)
                 node = self.add_child(node, move, board)
 
@@ -83,7 +109,9 @@ class ChessianEngine:
             for _ in range(5):
                 if board.is_game_over():
                     break
-                board.push(random.choice(list(board.legal_moves)))
+                moves = sort_moves(board, board.legal_moves)
+                next_move = moves[0] if random.random() < 0.7 else random.choice(moves)
+                board.push(next_move)
             result = evaluate_position(board)
 
             # Backpropagation

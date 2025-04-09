@@ -6,7 +6,7 @@ import chess.engine
 def main():
     # Initialize two UCI engines
     engine1 = chess.engine.SimpleEngine.popen_uci([
-        sys.executable, 'chessian/main.py', 'random'
+        sys.executable, 'chessian/main.py', 'mcts'
     ])
     engine2 = chess.engine.SimpleEngine.popen_uci([
         sys.executable, 'chessian/main.py', 'mcts'
@@ -17,9 +17,10 @@ def main():
     while not board.is_game_over():
         # Alternate between engines
         current_engine = engine1 if board.turn == chess.WHITE else engine2
-        result = current_engine.play(board, chess.engine.Limit(time=1.0))
-        print(result)
+        result = current_engine.play(board, chess.engine.Limit(time=0.1))
         board.push(result.move)
+        print(board)
+        print()
         if len(board.move_stack) > 100:
             print("Game over due to 100 moves timeout.")
             break
