@@ -4,6 +4,36 @@ import math
 import sys
 from time import time
 
+
+def evaluate_position(board: chess.Board) -> float:
+    if board.is_checkmate():
+        return -1.0 if board.turn else 1.0  # Scale to [-1, 1] range
+    
+    if board.is_stalemate() or board.is_insufficient_material():
+        return 0.0  # Draw
+    
+    piece_values = {
+        chess.PAWN: 1,
+        chess.KNIGHT: 3,
+        chess.BISHOP: 3,
+        chess.ROOK: 5,
+        chess.QUEEN: 9,
+        chess.KING: 0  # King has no material value in this context
+    }
+    material_score = 0
+    for piece_type, value in piece_values.items():
+        material_score += len(board.pieces(piece_type, chess.WHITE)) * value
+        material_score -= len(board.pieces(piece_type, chess.BLACK)) * value
+    
+    # Scale the material score to a reasonable range
+    # The maximum theoretical material difference in chess is around 78 points
+    # (8 pawns + 2 knights + 2 bishops + 2 rooks + 1 queen = 39 points per side)
+    scaled_score = material_score / 78.0
+    
+    # Limit the range to [-0.95, 0.95] to leave room for terminal states
+    return max(min(scaled_score, 0.95), -0.95)
+
+
 class Node:
     def __init__(self, board, move=None, parent=None):
         self.board = board.copy()
@@ -21,6 +51,7 @@ class ChessianEngine:
         self.mode = mode
         self.board = board
         self.exploration_constant = 10
+        self.root = Node(self.board)
 
     def get_random_move(self):
         legal_moves = list(self.board.legal_moves)
@@ -31,11 +62,10 @@ class ChessianEngine:
             return self.get_random_move()
         
         # MCTS implementation
-        root = Node(self.board)
         end_time = time() + time_limit
 
         while time() < end_time:
-            node = root
+            node = self.root
             board = self.board.copy()
 
             # Selection
@@ -50,20 +80,22 @@ class ChessianEngine:
                 node = self.add_child(node, move, board)
 
             # Simulation
-            while not board.is_game_over():
+            for _ in range(5):
+                if board.is_game_over():
+                    break
                 board.push(random.choice(list(board.legal_moves)))
+            result = evaluate_position(board)
 
             # Backpropagation
-            result = self.get_result(board)
             while node is not None:
                 node.visits += 1
                 node.wins += result
                 node = node.parent
 
-        return sorted(root.children, key=lambda c: c.visits)[-1].move
+        return max(self.root.children, key=lambda c: c.visits).move
 
     def evaluate_position(self):
-        return 42  # Placeholder for a real evaluation function 
+        return round(100 * self.root.wins / self.root.visits) if self.root.visits > 0 else 0
 
     def uct_select_child(self, node):
         exploitation = lambda c: c.wins / c.visits if node.board.turn == chess.WHITE else (c.visits - c.wins) / c.visits
