@@ -17,7 +17,7 @@ def main():
     while not board.is_game_over():
         # Alternate between engines
         current_engine = engine1 if board.turn == chess.WHITE else engine2
-        result = current_engine.play(board, chess.engine.Limit(time=0.1))
+        result = current_engine.play(board, chess.engine.Limit(time=1.0))
         print(result)
         board.push(result.move)
         if len(board.move_stack) > 100:
