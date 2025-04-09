@@ -15,12 +15,12 @@ class Node:
         self.untried_moves = list(board.legal_moves)
 
 class ChessianEngine:
-    def __init__(self, mode):
+    def __init__(self, board, mode):
         self.name = "Chessian"
         self.author = "Ruby"
-        self.board = chess.Board()
         self.mode = mode
-        self.exploration_constant = 1.41
+        self.board = board
+        self.exploration_constant = 10
 
     def get_random_move(self):
         legal_moves = list(self.board.legal_moves)
@@ -66,7 +66,10 @@ class ChessianEngine:
         return 42  # Placeholder for a real evaluation function 
 
     def uct_select_child(self, node):
-        return sorted(node.children, key=lambda c: c.wins / c.visits + self.exploration_constant * math.sqrt(2 * math.log(node.visits) / c.visits))[-1]
+        exploitation = lambda c: c.wins / c.visits if node.board.turn == chess.WHITE else (c.visits - c.wins) / c.visits
+        exploration = lambda c: math.sqrt(2 * math.log(node.visits) / c.visits)
+        uct = lambda c: exploitation(c) + self.exploration_constant * exploration(c)
+        return max(node.children, key=uct)
 
     def add_child(self, parent, move, board):
         child_node = Node(board, move, parent)
@@ -75,9 +78,8 @@ class ChessianEngine:
         return child_node
 
     def get_result(self, board):
-        our_side = self.board.turn
         if board.is_checkmate():
-            return 1 if board.turn == our_side else 0
+            return 1 if board.turn == chess.WHITE else 0
         elif board.is_stalemate() or board.is_insufficient_material() or board.is_seventyfive_moves() or board.is_fivefold_repetition():
             return 0.5
         else:
@@ -88,7 +90,7 @@ def main():
         mode = sys.argv[1]
     else:
         mode = 'random'
-    engine = ChessianEngine(mode)
+    engine = ChessianEngine(chess.Board(), mode)
     
     while True:
         cmd = input().strip()
@@ -108,13 +110,21 @@ def main():
             engine.board.reset()
             
         elif cmd.startswith("position"):
+            board = chess.Board()
             parts = cmd.split()
             if len(parts) >= 2:
                 if parts[1] == "startpos":
-                    engine.board.reset()
+                    board.reset()
                     if len(parts) > 3 and parts[2] == "moves":
                         for move in parts[3:]:
-                            engine.board.push_uci(move)
+                            board.push_uci(move)
+                elif parts[1] == "fen":
+                    fen = " ".join(parts[2:8])  # Join the FEN parts
+                    board.set_fen(fen)
+                    if len(parts) > 9 and parts[8] == "moves":
+                        for move in parts[9:]:
+                            board.push_uci(move)
+            engine = ChessianEngine(board, mode)
                             
         elif cmd.startswith("go"):
             # Extract movetime if specified, default to 1 second
