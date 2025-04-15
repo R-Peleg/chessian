@@ -18,7 +18,7 @@ def main():
     engines = {
         'random': RandomEngine(board, evaluator),
         'mcts': MCTSEngine(board, evaluator),
-        'llm_direct': DirectEngine(board, llm_evaluator),
+        'llm_mcts': MCTSEngine(board, llm_evaluator),
     }
     engine = engines.get(mode, RandomEngine(board, evaluator))
     
