@@ -40,12 +40,16 @@ class MCTSEngine:
                 node = self.add_child(node, move, board)
 
             # Simulation
+            rollout_moves = 0
             while not board.is_game_over():
                 moves = self.evaluator.sort_moves(board, board.legal_moves)
                 if not moves:
                     break
                 next_move = moves[0] if random.random() < 0.7 else random.choice(moves)
                 board.push(next_move)
+                rollout_moves += 1
+                if rollout_moves > 5:
+                    break
             result = self.evaluator.evaluate_position(board)
 
             # Backpropagation
