@@ -3,6 +3,7 @@ import json
 from functools import lru_cache
 import random
 import os
+import time
 try:
     from google import genai
 except ImportError:
@@ -56,10 +57,23 @@ class GeminiEvaluator:
         prompt += '{"score": 0.51, "best_move": "e2e4"}\n\n'
         prompt += GeminiEvaluator.board_to_string(board)
         prompt += "\nEvaluate the position and give a score from 0 to 1, where 0 is a losing position for white and 1 is a winning position for white.\n"
-        response = self.client.models.generate_content(
-            model=self.model_name,
-            contents=prompt,
-        )
+        for i in range(8):
+            try:
+                response = self.client.models.generate_content(
+                    model=self.model_name,
+                    contents=prompt,
+                )
+            except genai.errors.ClientError as e:
+
+                if 'RESOURCE_EXHAUSTED.' in str(e) and i < 7:
+                    retry_time = 1 * (2 ** i)
+                    for d in e.details['error']['details']:
+                        if d['@type'] == 'type.googleapis.com/google.rpc.RetryInfo':
+                            retry_time_str = d['retryDelay']
+                            retry_time = int(retry_time_str.split('s')[0])
+                    time.sleep(retry_time)
+                    continue
+                raise
         # print(response.text)
         json_text = response.text.strip()
         # Find JSON content between curly braces
