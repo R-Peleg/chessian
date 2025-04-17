@@ -32,7 +32,7 @@ def download_puzzles(path):
             for line in content.split(b'\n')[1:]:
                 decoded_line = line.decode('utf-8')
                 fields = decoded_line.strip().split(',')
-                if len(fields) >= 5 and fields[3].isdigit() and int(fields[3]) < 300:  # Filter easy puzzles
+                if len(fields) >= 5 and fields[3].isdigit() and int(fields[3]) < 500:  # Filter easy puzzles
                     writer.writerow(fields)
 
 
@@ -69,9 +69,9 @@ def main():
     path = 'easy_puzzles.csv'
     download_puzzles(path)
     engine = chess.engine.SimpleEngine.popen_uci([
-        sys.executable, 'chessian/main.py', 'mcts'
+        sys.executable, 'chessian/main.py', 'llm_mcts'
     ])
-    for think_time in [0.1, 0.5, 1.0]:
+    for think_time in [0.1, 0.5, 1.0, 30.0]:
         print(f"Think time: {think_time} seconds")
         stats = test_engine(engine, path, think_time)
         print(stats)

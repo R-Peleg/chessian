@@ -14,16 +14,19 @@ class Node:
         self.untried_moves = list(board.legal_moves)
 
 class MCTSEngine:
-    def __init__(self, board: chess.Board, evaluator, exploration_constant=1.5):
+    def __init__(self, board: chess.Board, evaluator, exploration_constant=1.5, 
+                 node_budget=float('inf')):
         self.name = "Chessian MCTS"
         self.board = board
         self.evaluator = evaluator
         self.exploration_constant = exploration_constant
         self.root = Node(self.board)
+        self.node_budget = node_budget
+        self.node_count = 0
 
     def get_best_move(self, time_limit=1.0):
         end_time = time() + time_limit
-        while time() < end_time:
+        while time() < end_time and self.node_count < self.node_budget:
             node = self.root
             board = self.board.copy()
 
@@ -57,6 +60,7 @@ class MCTSEngine:
                 node.visits += 1
                 node.wins += result
                 node = node.parent
+            self.node_count += 1
 
         return max(self.root.children, key=lambda c: c.visits).move
 
