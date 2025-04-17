@@ -4,6 +4,7 @@ from functools import lru_cache
 import random
 import os
 import time
+import sys
 try:
     from google import genai
 except ImportError:
@@ -105,6 +106,9 @@ class GeminiEvaluator:
             best_move = best_move_uci[0]
             moves_copy.remove(best_move)
             moves_copy.insert(0, best_move)
+        else:
+            # Write info to stderr
+            print(f"Best move not found in legal moves: {best_move_str}, position {board.fen()}", file=sys.stderr)
         return moves_copy
 
 
