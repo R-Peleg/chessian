@@ -108,7 +108,8 @@ class GeminiEvaluator:
             moves_copy.insert(0, best_move)
         else:
             # Write info to stderr
-            print(f"Best move not found in legal moves: {best_move_str}, position {board.fen()}", file=sys.stderr)
+            message = f"Best move not found in legal moves: {best_move_str}, position {board.fen()}"
+            print(message, file=sys.stderr)
         return moves_copy
 
 

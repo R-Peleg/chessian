@@ -4,8 +4,21 @@ from evaluator import Evaluator
 from random_engine import RandomEngine
 from mcts_engine import MCTSEngine
 from direct_engine import DirectEngine
-from llm_evaluator import LLMEvaluator
+# from llm_evaluator import LLMEvaluator
 from gemini_evaluator import GeminiEvaluator
+
+
+def new_engine(mode, board):
+    evaluator = Evaluator()
+    # llm_evaluator = LLMEvaluator('Qwen/Qwen2.5-0.5B', 'cpu')
+    engines = {
+        'random': RandomEngine(board, evaluator),
+        'mcts': MCTSEngine(board, evaluator),
+        # 'llm_mcts': MCTSEngine(board, llm_evaluator),
+        'gemini_direct': DirectEngine(board, GeminiEvaluator('gemini-2.0-flash')),
+        'gemini_mcts': MCTSEngine(board, GeminiEvaluator('gemini-2.0-flash')),
+    }
+    return engines.get(mode, RandomEngine(board, evaluator))
 
 
 def main():
@@ -13,18 +26,10 @@ def main():
         mode = sys.argv[1]
     else:
         mode = 'random'
+
     board = chess.Board()
-    evaluator = Evaluator()
-    llm_evaluator = LLMEvaluator('Qwen/Qwen2.5-0.5B', 'cpu')
-    engines = {
-        'random': RandomEngine(board, evaluator),
-        'mcts': MCTSEngine(board, evaluator),
-        'llm_mcts': MCTSEngine(board, llm_evaluator),
-        'gemini_direct': DirectEngine(board, GeminiEvaluator('gemini-2.0-flash')),
-        'gemini_mcts': MCTSEngine(board, GeminiEvaluator('gemini-2.0-flash')),
-    }
-    engine = engines.get(mode, RandomEngine(board, evaluator))
-    
+    engine = new_engine(mode, board)
+
     while True:
         cmd = input().strip()
         
@@ -38,7 +43,7 @@ def main():
             print("readyok")
         elif cmd == "ucinewgame":
             board.reset()
-            engine = RandomEngine(board, evaluator) if mode == 'random' else MCTSEngine(board, evaluator)
+            engine = new_engine(mode, board)
         elif cmd.startswith("position"):
             board = chess.Board()
             parts = cmd.split()
@@ -53,7 +58,7 @@ def main():
                 if len(parts) > 9 and parts[8] == "moves":
                     for move in parts[9:]:
                         board.push_uci(move)
-            engine = RandomEngine(board, evaluator) if mode == 'random' else MCTSEngine(board, evaluator)
+            engine = new_engine(mode, board)
         elif cmd.startswith("go"):
             movetime = 1.0
             parts = cmd.split()
@@ -69,4 +74,10 @@ def main():
             print(f"bestmove {move.uci()}")
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        path = sys.argv[0].replace('.py', '_exception.log')
+        with open(path, 'a') as f:
+            f.write(str(e) + '\n')
+        raise
