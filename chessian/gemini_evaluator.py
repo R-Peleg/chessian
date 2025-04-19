@@ -68,7 +68,7 @@ class GeminiEvaluator:
         prompt += GeminiEvaluator.board_to_string(board)
         if last_move_san:
             prompt += f'Last move was {last_move_san}\n'
-        prompt += "Legal moves: " + ', '.join([board.san(m) for m in board.legal_moves]) + '\n'
+        # prompt += "Legal moves: " + ', '.join([board.san(m) for m in board.legal_moves]) + '\n'
         prompt += "\nEvaluate the position and give a score from 0 to 1, where 0 is a losing position for white and 1 is a winning position for white.\n"
         total_slept_time = 0
         for i in range(4):
@@ -120,7 +120,8 @@ class GeminiEvaluator:
         best_move_str = result_dict.get('best_move')
         # Remove '+' signs
         def remove_signs(move_str):
-            return move_str.replace('+', '').replace('#', '').replace('x', '').replace(':', '')
+            return move_str.replace('+', '').replace('#', '').replace('x', '')\
+                .replace(':', '').replace('-', '')
         best_move_str = remove_signs(best_move_str)
         # Treat moves like Nb1c3
         if len(best_move_str) == 5 and best_move_str[0] in 'NBRQK':
