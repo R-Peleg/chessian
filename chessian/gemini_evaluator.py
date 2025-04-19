@@ -1,5 +1,6 @@
 import chess
 import json
+from typing import Optional
 from functools import lru_cache
 import random
 import os
@@ -54,16 +55,19 @@ class GeminiEvaluator:
         return description.strip()
     
     @lru_cache(maxsize=128)
-    def call_gemini(self, board_fen: str) -> dict:
+    def call_gemini(self, board_fen: str, last_move_san: Optional[str] = None) -> dict:
         board = chess.Board(board_fen)
         prompt = ''
         prompt += "You are a chess engine. You are given a position and you need to evaluate it.\n"
         prompt += 'the result MUST end with JSON in format \{"score": <int>, "best_move": <string>\}.\n'
+        prompt += 'Make sure best_move is a legal move in the position.\n'
         prompt += f'example:\n'
         prompt += GeminiEvaluator.board_to_string(chess.Board())
         prompt += "\nEvaluate the position and give a score from 0 to 1, where 0 is a losing position for white and 1 is a winning position for white.\n"
-        prompt += '{"score": 0.51, "best_move": "e2e4"}\n\n'
+        prompt += '{"score": 0.51, "best_move": "Nf3"}\n\n'
         prompt += GeminiEvaluator.board_to_string(board)
+        if last_move_san:
+            prompt += f'Last move was {last_move_san}\n'
         prompt += "\nEvaluate the position and give a score from 0 to 1, where 0 is a losing position for white and 1 is a winning position for white.\n"
         total_slept_time = 0
         for i in range(4):
@@ -98,7 +102,13 @@ class GeminiEvaluator:
             return {}
 
     def evaluate_position(self, board: chess.Board) -> float:
-        response_dict = self.call_gemini(board.fen())
+        if board.peek() is None:
+            last_move_san = None
+        else:
+            board_before_last_move = board.copy()
+            last_move = board_before_last_move.pop()
+            last_move_san = board_before_last_move.san(last_move)
+        response_dict = self.call_gemini(board.fen(), last_move_san)
         score = response_dict.get('score', 0.0)
         return score
 
@@ -107,11 +117,13 @@ class GeminiEvaluator:
         random.shuffle(moves_copy)
         result_dict = self.call_gemini(board.fen())
         best_move_str = result_dict.get('best_move')
+        # Remove '+' signs
+        best_move_str = best_move_str.replace('+', '')
         # Treat moves like Nb1c3
         if len(best_move_str) == 5 and best_move_str[0] in 'NBRQK':
             best_move_str = best_move_str[1:]
         best_move_uci = [m for m in moves_copy if m.uci() == best_move_str
-                         or board.san(m) == best_move_str]
+                         or board.san(m).replace('+', '') == best_move_str]
         if best_move_uci:
             best_move = best_move_uci[0]
             moves_copy.remove(best_move)
@@ -125,7 +137,8 @@ class GeminiEvaluator:
 
 def main():
     import time
-    board = chess.Board('rn1qk2r/ppp1bppp/4b3/4p3/1P3n2/2P3P1/P3K2P/RNB3r1 w kq - 0 15')
+    board = chess.Board('rn1qk2r/ppp1bppp/4b1n1/4p3/1P3P2/2P3P1/P3K2P/RNB3r1 w kq - 0 15')
+    board.push(chess.Move.from_uci('g6f4'))
     print(GeminiEvaluator.board_to_string(board))
     print('--------------')
     start_time = time.time()
