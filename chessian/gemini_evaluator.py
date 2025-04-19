@@ -107,6 +107,9 @@ class GeminiEvaluator:
         random.shuffle(moves_copy)
         result_dict = self.call_gemini(board.fen())
         best_move_str = result_dict.get('best_move')
+        # Treat moves like Nb1c3
+        if len(best_move_str) == 5 and best_move_str[0] in 'NBRQK':
+            best_move_str = best_move_str[1:]
         best_move_uci = [m for m in moves_copy if m.uci() == best_move_str
                          or board.san(m) == best_move_str]
         if best_move_uci:
