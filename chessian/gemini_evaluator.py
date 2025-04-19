@@ -42,7 +42,14 @@ class GeminiEvaluator:
                 squares_str = ', '.join([chess.square_name(sq) for sq in pieces])
                 description += f'{color_str} {chess.piece_name(piece_type)}: {squares_str}\n'
         description += f'{"white" if board.turn else "black"} to play\n'
-        description += f'Castling: {board.castling_rights}\n'
+        white_ks_castling = board.has_kingside_castling_rights(chess.WHITE)
+        description += f'White {"has" if white_ks_castling else "does not have"} kingside castling rights\n'
+        white_qs_castling = board.has_queenside_castling_rights(chess.WHITE)
+        description += f'White {"has" if white_qs_castling else "does not have"} queenside castling rights\n'
+        black_ks_castling = board.has_kingside_castling_rights(chess.BLACK)
+        description += f'Black {"has" if black_ks_castling else "does not have"} kingside castling rights\n'
+        black_qs_castling = board.has_queenside_castling_rights(chess.BLACK)
+        description += f'Black {"has" if black_qs_castling else "does not have"} queenside castling rights\n'
         description += f'En Passant: {chess.square_name(board.ep_square) if board.ep_square else "None"}\n'
         return description.strip()
     
@@ -115,13 +122,14 @@ class GeminiEvaluator:
 
 def main():
     import time
-    board = chess.Board('8/6k1/2R4p/5p1P/5P1K/6P1/8/r7 b - - 2 58')
+    board = chess.Board('rn1qk2r/ppp1bppp/4b3/4p3/1P3n2/2P3P1/P3K2P/RNB3r1 w kq - 0 15')
     print(GeminiEvaluator.board_to_string(board))
     print('--------------')
     start_time = time.time()
-    s = GeminiEvaluator('gemini-2.0-flash').evaluate_position(board)
+    eval = GeminiEvaluator('gemini-2.0-flash')
+    s = eval.evaluate_position(board)
     print(s)
-    m = GeminiEvaluator('gemini-2.0-flash').sort_moves(board, board.legal_moves)
+    m = eval.sort_moves(board, board.legal_moves)
     print(m)
     end_time = time.time()
     print(f"Time taken: {end_time - start_time:.3f} seconds")
