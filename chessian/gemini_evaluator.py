@@ -61,10 +61,10 @@ class GeminiEvaluator:
         prompt += "You are a chess engine. You are given a position and you need to evaluate it.\n"
         prompt += 'the result MUST end with JSON in format \{"score": <int>, "best_move": <string>\}.\n'
         prompt += 'Make sure best_move is a legal move in the position.\n'
-        prompt += f'example:\n'
-        prompt += GeminiEvaluator.board_to_string(chess.Board())
-        prompt += "\nEvaluate the position and give a score from 0 to 1, where 0 is a losing position for white and 1 is a winning position for white.\n"
-        prompt += '{"score": 0.51, "best_move": "Nf3"}\n\n'
+        # prompt += f'example:\n'
+        # prompt += GeminiEvaluator.board_to_string(chess.Board())
+        # prompt += "\nEvaluate the position and give a score from 0 to 1, where 0 is a losing position for white and 1 is a winning position for white.\n"
+        # prompt += '{"score": 0.51, "best_move": "Nf3"}\n\n'
         prompt += GeminiEvaluator.board_to_string(board)
         if last_move_san:
             prompt += f'Last move was {last_move_san}\n'
@@ -119,12 +119,14 @@ class GeminiEvaluator:
         result_dict = self.call_gemini(board.fen())
         best_move_str = result_dict.get('best_move')
         # Remove '+' signs
-        best_move_str = best_move_str.replace('+', '')
+        def remove_signs(move_str):
+            return move_str.replace('+', '').replace('#', '').replace('x', '').replace(':', '')
+        best_move_str = remove_signs(best_move_str)
         # Treat moves like Nb1c3
         if len(best_move_str) == 5 and best_move_str[0] in 'NBRQK':
             best_move_str = best_move_str[1:]
         best_move_uci = [m for m in moves_copy if m.uci() == best_move_str
-                         or board.san(m).replace('+', '') == best_move_str]
+                         or remove_signs(board.san(m)) == best_move_str]
         if best_move_uci:
             best_move = best_move_uci[0]
             moves_copy.remove(best_move)
