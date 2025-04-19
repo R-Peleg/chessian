@@ -68,6 +68,7 @@ class GeminiEvaluator:
         prompt += GeminiEvaluator.board_to_string(board)
         if last_move_san:
             prompt += f'Last move was {last_move_san}\n'
+        prompt += "Legal moves: " + ', '.join([board.san(m) for m in board.legal_moves]) + '\n'
         prompt += "\nEvaluate the position and give a score from 0 to 1, where 0 is a losing position for white and 1 is a winning position for white.\n"
         total_slept_time = 0
         for i in range(4):
@@ -102,12 +103,12 @@ class GeminiEvaluator:
             return {}
 
     def evaluate_position(self, board: chess.Board) -> float:
-        if board.peek() is None:
-            last_move_san = None
-        else:
+        try:
             board_before_last_move = board.copy()
             last_move = board_before_last_move.pop()
             last_move_san = board_before_last_move.san(last_move)
+        except IndexError:
+            last_move_san = None
         response_dict = self.call_gemini(board.fen(), last_move_san)
         score = response_dict.get('score', 0.0)
         return score
@@ -137,8 +138,7 @@ class GeminiEvaluator:
 
 def main():
     import time
-    board = chess.Board('rn1qk2r/ppp1bppp/4b1n1/4p3/1P3P2/2P3P1/P3K2P/RNB3r1 w kq - 0 15')
-    board.push(chess.Move.from_uci('g6f4'))
+    board = chess.Board('r3k1n1/p5b1/N1p5/3pp1NB/7p/4P2P/2PqQPP1/3R1R1K b - - 1 31')
     print(GeminiEvaluator.board_to_string(board))
     print('--------------')
     start_time = time.time()
