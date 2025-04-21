@@ -35,11 +35,11 @@ class GeminiHeuristic:
         board = chess.Board(board_fen)
         side_to_move_str = "White" if board.turn == chess.WHITE else "Black"
         prompt = ''
-        prompt += "You are a friendly chess grandmaster. Please help me with that position.\n"
+        prompt += "You are the best chess player in the world. Please help me with that position.\n"
         prompt += "I want you to rank the position from 0 to 1 (0 is white losing and 1 is white winning).\n"
         prompt += f"Also give me the best {k} moves for {side_to_move_str}.\n"
         prompt += 'The result MUST end with JSON in format \{"score": <int>, "best_moves": [<string>]\}.\n'
-        prompt += reddit_bot_encoding(board)
+        prompt += board.fen() + '\n'
         total_slept_time = 0
         for i in range(4):
             try:
