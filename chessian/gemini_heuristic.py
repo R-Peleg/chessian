@@ -34,6 +34,8 @@ class GeminiHeuristic:
     def call_gemini(self, board_fen: str, k: int) -> dict:
         board = chess.Board(board_fen)
         side_to_move_str = "White" if board.turn == chess.WHITE else "Black"
+        moves = [board.san(m) for m in board.legal_moves]
+        random.shuffle(moves)
         prompt = ''
         prompt += "You are the best chess player in the world. Please help me with that position.\n"
         prompt += "I want you to rank the position from 0 to 1 (0 is white losing and 1 is white winning).\n"
@@ -43,7 +45,7 @@ class GeminiHeuristic:
         prompt += 'Then, look for potential tactics.' 
         prompt += '\n'
         prompt += 'The position is:' + board.fen() + '\n'
-        prompt += f'Select from the legal moves: ' + ', '.join([board.san(m) for m in (board.legal_moves)]) + '\n'
+        prompt += f'Select from the legal moves: ' + ', '.join(moves) + '\n'
         total_slept_time = 0
         for i in range(4):
             try:
