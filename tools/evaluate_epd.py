@@ -10,6 +10,7 @@ def test_heuristic(heuristic, epd_file_path):
         'top1': 0,
         'top3': 0,
         'top5': 0,
+        'failure': 0,
         'no_moves': 0,
         'total': 0,
     }
@@ -31,12 +32,14 @@ def test_heuristic(heuristic, epd_file_path):
                 stats['no_moves'] += 1
                 continue
             # Check if best move is in the top 5 moves
-            if set(best_moves).intersection(set(heuristic_moves[:5])):
-                stats['top5'] += 1
-            if set(best_moves).intersection(set(heuristic_moves[:3])):
-                stats['top3'] += 1
             if set(best_moves).intersection(set(heuristic_moves[:1])):
                 stats['top1'] += 1
+            if set(best_moves).intersection(set(heuristic_moves[:3])):
+                stats['top3'] += 1
+            if set(best_moves).intersection(set(heuristic_moves[:5])):
+                stats['top5'] += 1
+            else:
+                stats['failure'] += 1
     return stats
             
 
