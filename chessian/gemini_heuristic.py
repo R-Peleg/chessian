@@ -39,7 +39,11 @@ class GeminiHeuristic:
         prompt += "I want you to rank the position from 0 to 1 (0 is white losing and 1 is white winning).\n"
         prompt += f"Also give me the best {k} moves for {side_to_move_str}.\n"
         prompt += 'The result MUST end with JSON in format \{"score": <int>, "best_moves": [<string>]\}.\n'
-        prompt += board.fen() + '\n'
+        prompt += 'Think step by step. First, identify threats such as check and queen threats. '
+        prompt += 'Then, look for potential tactics.' 
+        prompt += '\n'
+        prompt += 'The position is:' + board.fen() + '\n'
+        prompt += f'Select from the legal moves: ' + ', '.join([board.san(m) for m in (board.legal_moves)]) + '\n'
         total_slept_time = 0
         for i in range(4):
             try:
