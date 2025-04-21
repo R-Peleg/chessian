@@ -13,6 +13,8 @@ def match_move(board: chess.Board, move_str: str) -> Optional[chess.Move]:
     # Check if the move_str matches any legal move in UCI format
     if len(move_str) == 5 and move_str[0] in 'NBRQK':
         move_str = move_str[1:]
+    if len(move_str) == 6 and move_str[0] in 'NBRQK' and move_str[3] == '-':
+        move_str = move_str[1:].replace('-', '')
     for move in legal_moves:
         if move_str == move.uci():
             return move
