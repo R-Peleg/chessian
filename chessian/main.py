@@ -16,7 +16,7 @@ def new_engine(mode, board):
     engines = {
         'random': RandomEngine(board, evaluator),
         'mcts': MCTSEngine(board, evaluator),
-        'alpha_beta': AlphaBetaEngine(board, evaluator, k=3, depth=2),
+        'alpha_beta': AlphaBetaEngine(board, evaluator, k=10, depth=4),
         # 'llm_mcts': MCTSEngine(board, llm_evaluator),
         'gemini_direct': DirectEngine(board, GeminiHeuristic('gemini-2.0-flash')),
         # 'gemini_mcts': MCTSEngine(board, GeminiEvaluator('gemini-2.0-flash')),
