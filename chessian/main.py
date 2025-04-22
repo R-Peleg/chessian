@@ -4,6 +4,7 @@ from evaluator import Evaluator
 from random_engine import RandomEngine
 from mcts_engine import MCTSEngine
 from direct_engine import DirectEngine
+from alpha_beta_engine import AlphaBetaEngine
 # from llm_evaluator import LLMEvaluator
 # from gemini_evaluator import GeminiEvaluator
 from gemini_heuristic import GeminiHeuristic
@@ -15,6 +16,7 @@ def new_engine(mode, board):
     engines = {
         'random': RandomEngine(board, evaluator),
         'mcts': MCTSEngine(board, evaluator),
+        'alpha_beta': AlphaBetaEngine(board, evaluator, k=3, depth=2),
         # 'llm_mcts': MCTSEngine(board, llm_evaluator),
         'gemini_direct': DirectEngine(board, GeminiHeuristic('gemini-2.0-flash')),
         # 'gemini_mcts': MCTSEngine(board, GeminiEvaluator('gemini-2.0-flash')),

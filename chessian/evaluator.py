@@ -43,3 +43,8 @@ class Evaluator:
             return score
         sorted_moves = sorted(moves, key=move_score, reverse=True)
         return sorted_moves
+    
+    def top_k_moves(self, board: chess.Board, k: int) -> list:
+        legal_moves = list(board.legal_moves)
+        sorted_moves = self.sort_moves(board, legal_moves)
+        return sorted_moves[:k] if sorted_moves else []
