@@ -13,12 +13,14 @@ from gemini_heuristic import GeminiHeuristic
 def new_engine(mode, board):
     evaluator = Evaluator()
     # llm_evaluator = LLMEvaluator('Qwen/Qwen2.5-0.5B', 'cpu')
+    gem_heuristic = GeminiHeuristic('gemini-2.0-flash')
     engines = {
         'random': RandomEngine(board, evaluator),
         'mcts': MCTSEngine(board, evaluator),
         'alpha_beta': AlphaBetaEngine(board, evaluator, k=10, depth=4),
+        'alpha_beta_gemini': AlphaBetaEngine(board, gem_heuristic, k=3, depth=2),
         # 'llm_mcts': MCTSEngine(board, llm_evaluator),
-        'gemini_direct': DirectEngine(board, GeminiHeuristic('gemini-2.0-flash')),
+        'gemini_direct': DirectEngine(board, gem_heuristic),
         # 'gemini_mcts': MCTSEngine(board, GeminiEvaluator('gemini-2.0-flash')),
     }
     return engines.get(mode, RandomEngine(board, evaluator))
