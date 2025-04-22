@@ -10,6 +10,9 @@ def remove_signs(move_str):
 
 def match_move(board: chess.Board, move_str: str) -> Optional[chess.Move]:
     legal_moves = board.legal_moves
+    # Remove leading ... (seen in gpt-4.1-nano)
+    if move_str.startswith('...'):
+        move_str = move_str[3:]
     # Check if the move_str matches any legal move in UCI format
     if len(move_str) == 5 and move_str[0] in 'NBRQK' \
             and move_str[1] in 'abcdefgh' and move_str[3] in 'abcdefgh':
