@@ -45,6 +45,7 @@ class OpenAIHeuristic:
             '\n'
             f'Then, suggest the **{k} best moves for White**, in algebraic notation (e.g., "Nf3", "dxe5").\n'
             '\n'
+            'Think step by step and explain your reasoning. Count pieces, check for develoment, and assess king safety.\n'
             'Your final response MUST be a valid JSON object in this exact format:'
             f'{{"score": <integer between -10 and 10>, "best_moves": {move_list_format}}}\n'
             '\n'
@@ -62,7 +63,7 @@ class OpenAIHeuristic:
             response_text = response.choices[0].message.content
         except Exception as e:
             raise ValueError(f"Error calling OpenAI API: {str(e)}")
-        # print(response_text)
+        print(response_text)
         json_text = response_text.strip()
         # Find JSON content between curly braces
         start = json_text.find('{')
@@ -94,10 +95,10 @@ class OpenAIHeuristic:
 
 def main():
     import time
-    board = chess.Board('8/7B/8/4n3/1k3p1r/5R2/8/4K3 w - - 0 1')
+    board = chess.Board('rnbqk1nr/pp1p1ppp/4p3/2b5/4P3/8/PPPP1PPP/RNB1KBNR w KQkq - 0 2')
     print('--------------')
     start_time = time.time()
-    eval = OpenAIHeuristic('gpt-4.1-nano')
+    eval = OpenAIHeuristic('gpt-4.1')
     s = eval.evaluate_position(board)
     print(s)
     m = eval.top_k_moves(board, 5)
