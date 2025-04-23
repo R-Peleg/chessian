@@ -39,18 +39,17 @@ class OpenAIHeuristic:
         # random.shuffle(moves)
         move_list_format = "[" + ', '.join(['"<move' + str(i+1) + '>"' for i in range(k)]) + "]"
         prompt = (
-            'You are the world\'s strongest chess engine. \n'
-            'Given the FEN below, evaluate the position **from White\'s perspective** on a scale from -10 to +10:\n'
-            '-10 = completely losing, 0 = equal position, +10 = completely winning.\n'
-            '\n'
-            f'Then, suggest the **{k} best moves for White**, in algebraic notation (e.g., "Nf3", "dxe5").\n'
-            '\n'
-            'Think step by step and explain your reasoning. Count pieces, check for develoment, and assess king safety.\n'
-            'Your final response MUST be a valid JSON object in this exact format:'
-            f'{{"score": <integer between -10 and 10>, "best_moves": {move_list_format}}}\n'
-            '\n'
-            f'FEN: {board_fen}\n'
+            'You are a very strong chess engine.\n\n'
+            f"The chess board is in the following state (FEN): '{board_fen}'.\n \n"
+            f'What is the best move for {side_to_move_str}?'
+            '\n\n'
+            'End the result with a JSON object in the format:\n'
+            '{\n'
+            '  "best_moves": [<move>]\n'
+            '}\n\n'
         )
+        # print(prompt)
+        # return
 
         try:
             response = self.client.chat.completions.create(
