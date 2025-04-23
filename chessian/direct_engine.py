@@ -13,7 +13,12 @@ class DirectEngine:
             if best_moves:
                 return best_moves[0]
             else:
-                return None
+                best_moves = self.evaluator.top_k_moves(self.board, 5)
+                if best_moves:
+                    return best_moves[0]
+                else:
+                    # Return random move
+                    return legal_moves[0] if legal_moves else None
         sorted_moves = self.evaluator.sort_moves(self.board, legal_moves)
         return sorted_moves[0] if sorted_moves else None
 
