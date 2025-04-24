@@ -17,7 +17,7 @@ def new_engine(mode, board):
     engines = {
         'random': RandomEngine(board, evaluator),
         'mcts': MCTSEngine(board, evaluator),
-        'alpha_beta': AlphaBetaEngine(board, evaluator, k=10, depth=4),
+        'alpha_beta': AlphaBetaEngine(board, evaluator, k=3, depth=2),
         'alpha_beta_gemini': AlphaBetaEngine(board, gem_heuristic, k=3, depth=2),
         # 'llm_mcts': MCTSEngine(board, llm_evaluator),
         'gemini_direct': DirectEngine(board, gem_heuristic),
