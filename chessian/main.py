@@ -8,17 +8,22 @@ from alpha_beta_engine import AlphaBetaEngine
 # from llm_evaluator import LLMEvaluator
 # from gemini_evaluator import GeminiEvaluator
 from gemini_heuristic import GeminiHeuristic
+from composite_heuristic import CompositeHeuristic
 
 
 def new_engine(mode, board):
     evaluator = Evaluator()
     # llm_evaluator = LLMEvaluator('Qwen/Qwen2.5-0.5B', 'cpu')
     gem_heuristic = GeminiHeuristic('gemini-2.0-flash')
+    gem_moves_classic_eval = CompositeHeuristic(
+        pos_eval_heuristic=evaluator,
+        top_moves_heuristic=gem_heuristic
+    )
     engines = {
         'random': RandomEngine(board, evaluator),
         'mcts': MCTSEngine(board, evaluator),
         'alpha_beta': AlphaBetaEngine(board, evaluator, k=3, depth=2),
-        'alpha_beta_gemini': AlphaBetaEngine(board, gem_heuristic, k=3, depth=2),
+        'alpha_beta_gemini': AlphaBetaEngine(board, gem_moves_classic_eval, k=3, depth=2),
         # 'llm_mcts': MCTSEngine(board, llm_evaluator),
         'gemini_direct': DirectEngine(board, gem_heuristic),
         # 'gemini_mcts': MCTSEngine(board, GeminiEvaluator('gemini-2.0-flash')),
