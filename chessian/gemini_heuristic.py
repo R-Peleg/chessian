@@ -10,6 +10,7 @@ from chessian.utils import match_move
 from chessian.position_encoding import reddit_bot_encoding
 try:
     from google import genai
+    from google.genai import types
 except ImportError:
     print("Please install the required libraries: google-genai")
     exit(1)
@@ -51,6 +52,9 @@ class GeminiHeuristic:
                 response = self.client.models.generate_content(
                     model=self.model_name,
                     contents=prompt,
+                    config=types.GenerateContentConfig(
+                        temperature=0,
+                    ),
                 )
                 break
             except genai.errors.ClientError as e:
