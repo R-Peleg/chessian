@@ -10,34 +10,7 @@ import importlib.util
 import sys
 import multiprocessing
 
-# Add a global evaluator to hold the instance in each worker process
-_global_evaluator = None
 
-def init_worker(evaluator_class, *evaluator_args):
-    """Initialize the worker process with a new evaluator instance."""
-    global _global_evaluator
-    _global_evaluator = evaluator_class(*evaluator_args)
-
-def load_evaluator_from_file(file_path, class_name):
-    """
-    Dynamically load a class from a Python file.
-    
-    Args:
-        file_path: Path to the Python file containing the evaluator class
-        class_name: Name of the evaluator class to load
-        
-    Returns:
-        An instance of the evaluator class
-    """
-    # Load the module from the file path
-    spec = importlib.util.spec_from_file_location("evaluator_module", file_path)
-    module = importlib.util.module_from_spec(spec)
-    sys.modules["evaluator_module"] = module
-    spec.loader.exec_module(module)
-    
-    # Get the class from the module and instantiate it
-    evaluator_class = getattr(module, class_name)
-    return evaluator_class()
 
 def load_chess_dataset(dataset_name):
     """
