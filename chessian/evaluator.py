@@ -20,7 +20,7 @@ class Evaluator:
         for piece_type, value in piece_values.items():
             material_score += len(board.pieces(piece_type, chess.WHITE)) * value
             material_score -= len(board.pieces(piece_type, chess.BLACK)) * value
-        return max(min(material_score, 10), -10)
+        return material_score * 100
 
     @staticmethod
     def sort_moves(board: chess.Board, moves) -> list:

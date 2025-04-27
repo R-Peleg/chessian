@@ -80,6 +80,8 @@ def test_evaluator(evaluator, dataset, num_samples=None, filter_criteria=None):
     
     # Process each position
     for _, row in dataset.iterrows():
+        # Columns:
+        # game_id,position_id,fen,evaluation,best_move,bestmove_is_capture,bestmove_is_check,bestmove_is_promotion,random_plies,moves_from_start
         # Create a chess board from FEN
         board = chess.Board(row['fen'])
         
@@ -88,8 +90,8 @@ def test_evaluator(evaluator, dataset, num_samples=None, filter_criteria=None):
             pred_eval = evaluator.evaluate_position(board)
             true_eval = row['evaluation']
             # Clip to (-10, 10) range
-            pred_eval = np.clip(pred_eval, -10, 10)
-            true_eval = np.clip(true_eval, -10, 10)
+            pred_eval = np.clip(pred_eval, -1000, 1000)
+            true_eval = np.clip(true_eval, -1000, 1000)
             
             predictions.append(pred_eval)
             ground_truth.append(true_eval)
@@ -109,6 +111,7 @@ def test_evaluator(evaluator, dataset, num_samples=None, filter_criteria=None):
         'mean_error': np.mean(errors),
         'median_error': np.median(errors),
         'max_error': np.max(np.abs(errors)),
+        'max_error_position': np.argmax(np.abs(errors)),
         'correlation': np.corrcoef(ground_truth, predictions)[0, 1],
         'num_positions': len(predictions)
     }
@@ -229,11 +232,14 @@ def main():
     dataset = load_chess_dataset(args.dataset_name)
     
     # Define filter criteria based on arguments
-    filter_criteria = None
-    if args.random_only:
-        filter_criteria = lambda row: row['random_plies'] > 0
-    elif args.actual_only:
-        filter_criteria = lambda row: row['random_plies'] == 0
+    def filter_criteria(row):
+        if args.random_only and row['random_plies'] == 0:
+            return False
+        if args.actual_only and row['random_plies'] > 0:
+            return False
+        if row['bestmove_is_capture'] or row['bestmove_is_check'] or row['bestmove_is_promotion']:
+            return False
+        return True
     
     # Test the evaluator
     print("Testing evaluator...")
