@@ -8,6 +8,7 @@ from datasets import load_dataset
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 import importlib.util
 import sys
+import multiprocessing
 
 def load_evaluator_from_file(file_path, class_name):
     """
@@ -52,8 +53,23 @@ def load_chess_dataset(dataset_name):
     df = df[~df['bestmove_is_capture'] & ~df['bestmove_is_check'] & ~df['bestmove_is_promotion']]
     return df
 
+def evaluate_single_position(args):
+    """Helper function to evaluate a single position for multiprocessing."""
+    evaluator, row = args
+    try:
+        board = chess.Board(row['fen'])
+        pred_eval = evaluator.evaluate_position(board)
+        true_eval = row['evaluation']
+        if board.turn == chess.BLACK:
+            true_eval = -true_eval
+        pred_eval = np.clip(pred_eval, -1000, 1000)
+        true_eval = np.clip(true_eval, -1000, 1000)
+        return (pred_eval, true_eval, pred_eval - true_eval, row['fen'])
+    except Exception as e:
+        print(f"Error evaluating position {row['position_id']}: {e}")
+        return None
 
-def test_evaluator(evaluator, dataset, num_samples=None, filter_criteria=None):
+def test_evaluator(evaluator, dataset, num_samples=None, filter_criteria=None, num_processes=None):
     """
     Test a chess position evaluator against a dataset of positions with known evaluations.
     
@@ -62,6 +78,7 @@ def test_evaluator(evaluator, dataset, num_samples=None, filter_criteria=None):
         dataset: DataFrame containing chess positions and evaluations
         num_samples: Number of samples to test (random subsample if provided)
         filter_criteria: Function to filter positions (takes a DataFrame row and returns boolean)
+        num_processes: Number of processes to use for multiprocessing (None=CPU count)
         
     Returns:
         Dictionary of performance metrics
@@ -74,41 +91,20 @@ def test_evaluator(evaluator, dataset, num_samples=None, filter_criteria=None):
     if num_samples and num_samples < len(dataset):
         dataset = dataset.sample(n=num_samples, random_state=42)
     
-    predictions = []
-    ground_truth = []
-    errors = []
-    fens = []
+    # Prepare arguments for multiprocessing
+    args = [(evaluator, row) for _, row in dataset.iterrows()]
     
-    # Create progress bar
-    pbar = tqdm(total=len(dataset), desc="Evaluating positions")
+    # Create process pool and evaluate positions
+    with multiprocessing.Pool(processes=num_processes) as pool:
+        results = list(tqdm(
+            pool.imap(evaluate_single_position, args),
+            total=len(args),
+            desc="Evaluating positions"
+        ))
     
-    # Process each position
-    for _, row in dataset.iterrows():
-        # Columns:
-        # game_id,position_id,fen,evaluation,best_move,bestmove_is_capture,bestmove_is_check,bestmove_is_promotion,random_plies,moves_from_start
-        # Create a chess board from FEN
-        board = chess.Board(row['fen'])
-        
-        # Get evaluation from the evaluator
-        try:
-            pred_eval = evaluator.evaluate_position(board)
-            true_eval = row['evaluation']
-            if board.turn == chess.BLACK:
-                true_eval = -true_eval  # Eval is inverted in GT
-            # Clip to (-10, 10) range
-            pred_eval = np.clip(pred_eval, -1000, 1000)
-            true_eval = np.clip(true_eval, -1000, 1000)
-            
-            predictions.append(pred_eval)
-            ground_truth.append(true_eval)
-            errors.append(pred_eval - true_eval)
-            fens.append(row['fen'])
-        except Exception as e:
-            print(f"Error evaluating position {row['position_id']}: {e}")
-        
-        pbar.update(1)
-    
-    pbar.close()
+    # Filter out None results and unzip the valid results
+    valid_results = [r for r in results if r is not None]
+    predictions, ground_truth, errors, fens = zip(*valid_results)
     
     # Calculate metrics
     metrics = {
@@ -227,6 +223,8 @@ def main():
     parser.add_argument('--output', default=None, help='Path to save the results plot')
     parser.add_argument('--random-only', action='store_true', help='Only test positions with random moves applied')
     parser.add_argument('--actual-only', action='store_true', help='Only test positions from actual games (no random moves)')
+    parser.add_argument('--processes', type=int, default=None, 
+                       help='Number of processes to use for parallel evaluation (default: CPU count)')
     
     args = parser.parse_args()
     
@@ -255,7 +253,8 @@ def main():
         evaluator, 
         dataset, 
         num_samples=args.samples,
-        filter_criteria=filter_criteria
+        filter_criteria=filter_criteria,
+        num_processes=args.processes
     )
     
     # Print overall metrics
