@@ -5,7 +5,7 @@ class Evaluator:
     @staticmethod
     def evaluate_position(board: chess.Board) -> float:
         if board.is_checkmate():
-            return -1.0 if board.turn else 1.0
+            return -10000.0 if board.turn else 100000.0
         if board.is_stalemate() or board.is_insufficient_material():
             return 0.0
         piece_values = {

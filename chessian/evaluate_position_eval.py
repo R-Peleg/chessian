@@ -44,11 +44,14 @@ def load_chess_dataset(dataset_name):
     
     # Convert to pandas DataFrame for easier manipulation
     if 'train' in dataset:
-        return pd.DataFrame(dataset['train'])
+        df = pd.DataFrame(dataset['train'])
     else:
         # Try to get the default split if 'train' is not available
         default_split = list(dataset.keys())[0]
-        return pd.DataFrame(dataset[default_split])
+        df = pd.DataFrame(dataset[default_split])
+    df = df[~df['bestmove_is_capture'] & ~df['bestmove_is_check'] & ~df['bestmove_is_promotion']]
+    return df
+
 
 def test_evaluator(evaluator, dataset, num_samples=None, filter_criteria=None):
     """
@@ -74,6 +77,7 @@ def test_evaluator(evaluator, dataset, num_samples=None, filter_criteria=None):
     predictions = []
     ground_truth = []
     errors = []
+    fens = []
     
     # Create progress bar
     pbar = tqdm(total=len(dataset), desc="Evaluating positions")
@@ -89,6 +93,8 @@ def test_evaluator(evaluator, dataset, num_samples=None, filter_criteria=None):
         try:
             pred_eval = evaluator.evaluate_position(board)
             true_eval = row['evaluation']
+            if board.turn == chess.BLACK:
+                true_eval = -true_eval  # Eval is inverted in GT
             # Clip to (-10, 10) range
             pred_eval = np.clip(pred_eval, -1000, 1000)
             true_eval = np.clip(true_eval, -1000, 1000)
@@ -96,6 +102,7 @@ def test_evaluator(evaluator, dataset, num_samples=None, filter_criteria=None):
             predictions.append(pred_eval)
             ground_truth.append(true_eval)
             errors.append(pred_eval - true_eval)
+            fens.append(row['fen'])
         except Exception as e:
             print(f"Error evaluating position {row['position_id']}: {e}")
         
@@ -111,7 +118,7 @@ def test_evaluator(evaluator, dataset, num_samples=None, filter_criteria=None):
         'mean_error': np.mean(errors),
         'median_error': np.median(errors),
         'max_error': np.max(np.abs(errors)),
-        'max_error_position': np.argmax(np.abs(errors)),
+        'max_error_position': fens[np.argmax(np.abs(errors))],
         'correlation': np.corrcoef(ground_truth, predictions)[0, 1],
         'num_positions': len(predictions)
     }
@@ -225,6 +232,9 @@ def main():
     
     # Load the evaluator
     from chessian.evaluator import Evaluator
+    from chessian.chatgpt_code_evaluator import CharGPTCodeEvaluator
+    from chessian.random_evluator import RandomEvaluator
+    from gemini_evaluator import GeminiEvaluator
     evaluator = Evaluator()
     
     # Load the dataset
@@ -236,8 +246,6 @@ def main():
         if args.random_only and row['random_plies'] == 0:
             return False
         if args.actual_only and row['random_plies'] > 0:
-            return False
-        if row['bestmove_is_capture'] or row['bestmove_is_check'] or row['bestmove_is_promotion']:
             return False
         return True
     
@@ -254,14 +262,7 @@ def main():
     print("\nOverall Performance:")
     for key, value in metrics.items():
         print(f"{key}: {value}")
-    
-    # Analyze performance by specific features
-    if 'bestmove_is_capture' in dataset.columns:
-        print("\nPerformance by Capture/Non-capture Positions:")
-        capture_metrics = analyze_by_feature(dataset, predictions, ground_truth, 'bestmove_is_capture')
-        for capture, m in capture_metrics.items():
-            print(f"{'Capture' if capture else 'Non-capture'} ({m['count']} positions): MAE={m['mae']:.2f}, Mean Error={m['mean_error']:.2f}")
-    
+
     if 'random_plies' in dataset.columns:
         print("\nPerformance by Number of Random Plies:")
         random_metrics = analyze_by_feature(dataset, predictions, ground_truth, 'random_plies')
