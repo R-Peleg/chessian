@@ -10,6 +10,14 @@ import importlib.util
 import sys
 import multiprocessing
 
+# Add a global evaluator to hold the instance in each worker process
+_global_evaluator = None
+
+def init_worker(evaluator_class, *evaluator_args):
+    """Initialize the worker process with a new evaluator instance."""
+    global _global_evaluator
+    _global_evaluator = evaluator_class(*evaluator_args)
+
 def load_evaluator_from_file(file_path, class_name):
     """
     Dynamically load a class from a Python file.
@@ -94,13 +102,20 @@ def test_evaluator(evaluator, dataset, num_samples=None, filter_criteria=None, n
     # Prepare arguments for multiprocessing
     args = [(evaluator, row) for _, row in dataset.iterrows()]
     
-    # Create process pool and evaluate positions
-    with multiprocessing.Pool(processes=num_processes) as pool:
-        results = list(tqdm(
-            pool.imap(evaluate_single_position, args),
-            total=len(args),
-            desc="Evaluating positions"
-        ))
+    if num_processes is None or num_processes > 1:
+        # Create process pool with initializer to set up evaluator in each worker
+        with multiprocessing.Pool(
+            processes=num_processes,
+            initializer=init_worker,
+        ) as pool:
+            results = list(tqdm(
+                pool.imap(evaluate_single_position, args),
+                total=len(args),
+                desc="Evaluating positions"
+            ))
+    else:
+        # Single process evaluation
+        results = [evaluate_single_position(row) for row in tqdm(rows, desc="Evaluating positions")]
     
     # Filter out None results and unzip the valid results
     valid_results = [r for r in results if r is not None]
@@ -233,7 +248,7 @@ def main():
     from chessian.chatgpt_code_evaluator import CharGPTCodeEvaluator
     from chessian.random_evluator import RandomEvaluator
     from gemini_evaluator import GeminiEvaluator
-    evaluator = Evaluator()
+    evaluator = GeminiEvaluator('gemma-3-27b-it')
     
     # Load the dataset
     print(f"Loading dataset from {args.dataset_name}")
