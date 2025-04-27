@@ -79,7 +79,6 @@ def test_evaluator(evaluator, dataset, num_samples=None, filter_criteria=None, n
         # Create process pool with initializer to set up evaluator in each worker
         with multiprocessing.Pool(
             processes=num_processes,
-            initializer=init_worker,
         ) as pool:
             results = list(tqdm(
                 pool.imap(evaluate_single_position, args),
@@ -88,7 +87,7 @@ def test_evaluator(evaluator, dataset, num_samples=None, filter_criteria=None, n
             ))
     else:
         # Single process evaluation
-        results = [evaluate_single_position(row) for row in tqdm(rows, desc="Evaluating positions")]
+        results = [evaluate_single_position(args) for args in tqdm(args, desc="Evaluating positions")]
     
     # Filter out None results and unzip the valid results
     valid_results = [r for r in results if r is not None]
@@ -221,7 +220,7 @@ def main():
     from chessian.chatgpt_code_evaluator import CharGPTCodeEvaluator
     from chessian.random_evluator import RandomEvaluator
     from gemini_evaluator import GeminiEvaluator
-    evaluator = GeminiEvaluator('gemma-3-27b-it')
+    evaluator = CharGPTCodeEvaluator()
     
     # Load the dataset
     print(f"Loading dataset from {args.dataset_name}")
