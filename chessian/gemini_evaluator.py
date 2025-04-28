@@ -60,7 +60,8 @@ class GeminiEvaluator:
         board = chess.Board(board_fen)
         prompt = ''
         prompt += "You are a chess engine. You are given a position and you need to evaluate it.\n"
-        prompt += 'the result MUST end with JSON in format \{"score": <int>, "best_move": <string>\}.\n'
+        prompt += 'the result MUST end with JSON in format \{"score": <float>, "best_move": <string>\}.\n'
+        prompt += 'Score is pawn advantage for white, where 0 is a tie.\n'
         prompt += 'Make sure best_move is a legal move in the position.\n'
         # prompt += f'example:\n'
         # prompt += GeminiEvaluator.board_to_string(chess.Board())
@@ -108,7 +109,7 @@ class GeminiEvaluator:
             last_move_san = None
         response_dict = self.call_gemini(board.fen(), last_move_san)
         score = response_dict.get('score', 0.0)
-        return score
+        return score * 100.0
 
     def sort_moves(self, board: chess.Board, moves) -> list:
         moves_copy = list(moves)
