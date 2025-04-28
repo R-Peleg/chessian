@@ -94,7 +94,16 @@ def test_evaluator(evaluator, dataset, num_samples=None, filter_criteria=None, n
     predictions, ground_truth, errors, fens = zip(*valid_results)
     
     # Calculate metrics
+    def is_miss_winning_side(pred, gt):
+        margin = 1.0  # Consider this advatage as win
+        return (gt > margin and pred < 0.1) or (gt < -margin and pred > -0.1)
+
+    def is_wrong_draw(pred, gt):
+        return abs(gt) > 1 and abs(pred) < 0.1
+
     metrics = {
+        'miss_winning_side_rate': np.mean([is_miss_winning_side(p, gt) for p, gt in zip(predictions, ground_truth)]),
+        'wrong_draw_rate': np.mean([is_wrong_draw(p, gt) for p, gt in zip(predictions, ground_truth)]),
         'mse': mean_squared_error(ground_truth, predictions),
         'rmse': np.sqrt(mean_squared_error(ground_truth, predictions)),
         'mae': mean_absolute_error(ground_truth, predictions),
@@ -185,6 +194,8 @@ def plot_results(predictions, ground_truth, metrics, output_path=None):
     plt.axis('off')
     metrics_text = '\n'.join([
         f"Number of positions: {metrics['num_positions']}",
+        f"Miss Winning Side Rate: {metrics['miss_winning_side_rate']:.2%}",
+        f"Wrong Draw Rate: {metrics['wrong_draw_rate']:.2%}",
         f"Mean Squared Error: {metrics['mse']:.2f}",
         f"Root Mean Squared Error: {metrics['rmse']:.2f}",
         f"Mean Absolute Error: {metrics['mae']:.2f}",
@@ -220,7 +231,8 @@ def main():
     from chessian.chatgpt_code_evaluator import CharGPTCodeEvaluator
     from chessian.random_evluator import RandomEvaluator
     from gemini_evaluator import GeminiEvaluator
-    evaluator = CharGPTCodeEvaluator()
+    from stockfish_depth1_heuristic import StockfishDepth1Heuristic
+    evaluator = StockfishDepth1Heuristic(r"C:\Users\ruby\chess\stockfish-windows-x86-64-avx2.exe")
     
     # Load the dataset
     print(f"Loading dataset from {args.dataset_name}")
