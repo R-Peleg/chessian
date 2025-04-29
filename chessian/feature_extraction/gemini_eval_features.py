@@ -33,7 +33,7 @@ class GeminiEvalFeatures:
 You are an expert chess analyst.
 Given the following position FEN: {board_fen}
 Evaluate it, write your evaluation with the following JSON:
-{{"material": <float>, "pawn_structur": <float>, "mobility": <float>, 'king_safety': <float>}}
+{{"material": <float>, "pawn_structure": <float>, "mobility": <float>, 'king_safety': <float>}}
 Where:
 Material represents the piece count advantage for white
 Pawns represents the pawn structure advantage for white
@@ -85,7 +85,7 @@ Advantage for black is respresented by negative score.
 
 def main():
     import sys
-    model_name = sys.argv[1] if len(sys.argv) > 1 else 'gemma-2-27b-it'
+    model_name = sys.argv[1] if len(sys.argv) > 1 else 'gemma-3-27b-it'
     fen = 'rnbq1rk1/1pppppbp/p5p1/7n/P2P4/6P1/1PPNPPBP/RNBQK2R w KQ - 0 7'
     board = chess.Board(fen)
     gemini_eval_features = GeminiEvalFeatures(model_name)
