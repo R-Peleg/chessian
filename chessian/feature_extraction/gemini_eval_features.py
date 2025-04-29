@@ -80,7 +80,7 @@ Advantage for black is respresented by negative score.
         """
         Extract features from the board using Gemini evaluation.
         """
-        response_dict = self.call_gemini(board.fen(), 5)
+        response_dict = self.call_gemini(board.fen())
         return response_dict
 
 def main():
