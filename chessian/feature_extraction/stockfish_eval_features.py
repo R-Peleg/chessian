@@ -93,7 +93,7 @@ def main():
     # Example usage
     import sys
     stockfish_path = sys.argv[1]
-    fen = 'r3k1r1/3nqpPp/p2p2p1/1pp1p3/4N3/1PPPN1P1/1P3PBP/R3R1K1 b q - 3 19'
+    fen = 'rnbq1rk1/1pppppbp/p5p1/7n/P2P4/6P1/1PPNPPBP/RNBQK2R w KQ - 0 7'
     board = chess.Board(fen)
     with chess.engine.SimpleEngine.popen_uci(stockfish_path) as stockfish:
         stockfish_eval_features = StockfishEvalFeatures(stockfish)

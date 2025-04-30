@@ -231,8 +231,9 @@ def main():
     from chessian.chatgpt_code_evaluator import CharGPTCodeEvaluator
     from chessian.random_evluator import RandomEvaluator
     from gemini_evaluator import GeminiEvaluator
+    from llm_evaluator import LLMEvaluator
     from stockfish_depth1_heuristic import StockfishDepth1Heuristic
-    evaluator = StockfishDepth1Heuristic(r"C:\Users\ruby\chess\stockfish-windows-x86-64-avx2.exe")
+    evaluator = LLMEvaluator('Qwen/Qwen2.5-0.5B-Instruct', 'cpu')
     
     # Load the dataset
     print(f"Loading dataset from {args.dataset_name}")

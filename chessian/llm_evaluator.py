@@ -37,20 +37,22 @@ class LLMEvaluator:
         prompt += "You are a chess expert. You are given a position and you need to evaluate it.\n"
         prompt += LLMEvaluator.board_to_string(board)
         prompt += "\nEvaluate the position and give a score - 1.0 point per white pawn advantage.\n"
-        
+        prompt += 'The result MUST end with JSON in format \{"score": <float>\}.\n'
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
         outputs = self.model.generate(inputs['input_ids'],
                                       attention_mask=inputs['attention_mask'],
                                       do_sample=False,
                                       top_k=None, top_p=None,
-                                      max_new_tokens=7)
+                                      temperature=None,
+                                      max_new_tokens=500)
         response = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
         print(response)
-        response_score = re.search(r'Score: (-?\d+\.\d+)', response)
+        response_score = re.search(r'score: (-?\d+\.\d+)', response)
         if response_score:
             score = float(response_score.group(1))
             return int(score * 100)
         else:
+            print('failed parse')
             return 0.0
 
     def sort_moves(self, board: chess.Board, moves) -> list:

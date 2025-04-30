@@ -69,7 +69,7 @@ def main():
     path = 'easy_puzzles.csv'
     download_puzzles(path)
     engine = chess.engine.SimpleEngine.popen_uci([
-        sys.executable, 'chessian/main.py', 'llm_mcts'
+        sys.executable, 'chessian/main.py', 'gemini_direct'
     ])
     for think_time in [0.1, 0.5, 1.0, 30.0]:
         print(f"Think time: {think_time} seconds")

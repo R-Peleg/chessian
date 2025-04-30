@@ -46,7 +46,7 @@ def test_heuristic(heuristic, epd_file_path):
 
 def main():
     # TODO: argparse
-    stats = test_heuristic(OpenAIHeuristic('gpt-4.1'), 'tools/LVL0.epd')
+    stats = test_heuristic(GeminiHeuristic('gemini-2.0-flash'), 'tools/LVL0.epd')
     print(stats)
 
 

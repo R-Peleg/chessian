@@ -9,21 +9,50 @@ from alpha_beta_engine import AlphaBetaEngine
 # from gemini_evaluator import GeminiEvaluator
 from gemini_heuristic import GeminiHeuristic
 from composite_heuristic import CompositeHeuristic
+from weighted_features_heuristic import WeightedFeaturesHeuristic
+from feature_extraction.stockfish_eval_features import StockfishEvalFeatures
 
+
+# Weights found by lasso regression
+CLASSIC_FEATURES_WEIGHTS = {
+    "Material": 0.6638062211120966,
+    "Imbalance": 0.0,
+    "Pawns": 0.9527885652092388,
+    "Knights": 0.0,
+    "Bishops": 0.14680968691215993,
+    "Rooks": 0.0,
+    "Queens": 0.0,
+    "Mobility": 0.8271389978937992,
+    "King safety": 0.45246437022494507,
+    "Threats": 1.1228572943646506,
+    "Passed": 0.7253141087156784,
+    "Space": 0.0,
+    "Winnable": 0.0
+}
 
 def new_engine(mode, board):
     evaluator = Evaluator()
     # llm_evaluator = LLMEvaluator('Qwen/Qwen2.5-0.5B', 'cpu')
     gem_heuristic = GeminiHeuristic('gemini-2.0-flash')
     gem_moves_classic_eval = CompositeHeuristic(
-        pos_eval_heuristic=evaluator,
+        pos_eval_heuristic=WeightedFeaturesHeuristic(),
         top_moves_heuristic=gem_heuristic
     )
+    if mode == 'ab_classic_features':
+        stockfish_path = "C:\\Users\\ruby\\chess\\stockfish-15-1.exe"
+        stockfish = chess.engine.SimpleEngine.popen_uci(stockfish_path)
+        return AlphaBetaEngine(board, CompositeHeuristic(
+            pos_eval_heuristic=WeightedFeaturesHeuristic(
+                feature_evaluator=StockfishEvalFeatures(stockfish),
+                weights=CLASSIC_FEATURES_WEIGHTS
+            ),
+            top_moves_heuristic=evaluator
+        ), k=7, depth=4),
     engines = {
         'random': RandomEngine(board, evaluator),
         'mcts': MCTSEngine(board, evaluator),
-        'alpha_beta': AlphaBetaEngine(board, evaluator, k=3, depth=2),
-        'alpha_beta_gemini': AlphaBetaEngine(board, gem_moves_classic_eval, k=3, depth=2),
+        'alpha_beta': AlphaBetaEngine(board, evaluator, k=7, depth=4),
+        'alpha_beta_gemini': AlphaBetaEngine(board, gem_heuristic, k=2, depth=3),
         # 'llm_mcts': MCTSEngine(board, llm_evaluator),
         'gemini_direct': DirectEngine(board, gem_heuristic),
         # 'gemini_mcts': MCTSEngine(board, GeminiEvaluator('gemini-2.0-flash')),

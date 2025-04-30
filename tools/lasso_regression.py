@@ -9,10 +9,12 @@ def main():
     parser = argparse.ArgumentParser(description='Run Lasso regression on joined dataset and features.')
     parser.add_argument('--dataset', required=True, help='Hugging Face dataset name (e.g., username/dataset)')
     parser.add_argument('--features', required=True, help='CSV file with extracted features')
+    parser.add_argument('--features2', required=True, help='CSV file with additional helper features')
     parser.add_argument('--test-size', type=float, default=0.2, help='Test set size (default: 0.2)')
     args = parser.parse_args([
         '--dataset', 'ReuvenP/chess_eval_for_search',
-        '--feature', 'classic_features.csv'
+        '--features', 'llm_features.csv',
+        '--features2', 'classic_features.csv'
     ])
 
     from datasets import load_dataset
@@ -25,6 +27,7 @@ def main():
         df = pd.DataFrame(dataset[default_split])
 
     features_df = pd.read_csv(args.features)
+    additional_features_df = pd.read_csv(args.features2)
 
     # Filter out positions where the side to move is in check
     def not_in_check(fen):
@@ -53,22 +56,30 @@ def main():
     df = df[(df['evaluation'] <= 500) & (df['evaluation'] >= -500)]
 
     # Join on position_id
-    merged = pd.merge(df, features_df, on='position_id')
+    merged = pd.merge(df, features_df, on='position_id').merge(additional_features_df, on='position_id', how='left')
 
     # Use 'evaluation' as the target column
     target = merged['evaluation']
     feature_cols = [col for col in features_df.columns if col != 'position_id']
-    X = merged[feature_cols] * 100
+    feature_cols = []
+    add_features_cols = [col for col in additional_features_df.columns if col != 'position_id']
+    # add_features_cols = ['Material']
+    added_featuree_scale = 1
+    X = pd.concat([merged[feature_cols], merged[add_features_cols] / added_featuree_scale], axis=1) * 100
     y = target
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=args.test_size, random_state=42)
 
-    lasso = Lasso(alpha=1)
+    lasso = Lasso(alpha=100, positive=True)
     lasso.fit(X_train, y_train)
 
     print('Feature weights:')
-    for name, coef in zip(feature_cols, lasso.coef_):
-        print(f'{name}: {coef}')
+    print("{")
+    for name, coef in zip(feature_cols + add_features_cols, lasso.coef_):
+        if name in add_features_cols:
+            coef /= added_featuree_scale
+        print(f'    "{name}": {coef}')
+    print("}")
 
     preds = lasso.predict(X_test)
     mse = mean_squared_error(y_test, preds)
