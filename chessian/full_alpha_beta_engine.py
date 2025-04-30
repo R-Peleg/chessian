@@ -9,7 +9,7 @@ class FullAlphaBetaEngine:
     """
     Engine based on alpha-beta pruning with iterative deepening.
     """
-    def __init__(self, board, heuristic, depth) -> None:
+    def __init__(self, board: chess.Board, heuristic, depth) -> None:
         """
         heuristic: object with methods 'evaluate_position'.
         depth: maximum depth of the search tree
@@ -39,7 +39,7 @@ class FullAlphaBetaEngine:
         elif self.board.is_stalemate() or self.board.is_insufficient_material():
             return None, 0
 
-        if depth == 0:
+        if depth == 0 and not self.board.is_check() or depth < -2:
             return None, self.heuristic.evaluate_position(self.board)
 
         moves = list(self.board.legal_moves)
