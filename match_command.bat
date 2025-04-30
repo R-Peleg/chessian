@@ -1,4 +1,4 @@
- C:\Users\ruby\chess\cutechess-1.3.1-win64\cutechess-cli.exe -engine name="Stockfish (1400)" cmd="C:\Users\ruby\chess\stockfish-windows-x86-64-avx2.exe" proto=uci option.UCI_LimitStrength=true option.UCI_Elo="1400" st=0.1 timemargin=50 -engine name="Gemini Direct Use" cmd=C:\Users\ruby\projects\chessian\gemini_direct_engine.bat proto=uci st=60 stderr=gemini_err.log -pgnout match.pgn
+ C:\Users\ruby\chess\cutechess-1.3.1-win64\cutechess-cli.exe -engine name="Stockfish (1350)" cmd="C:\Users\ruby\chess\stockfish-windows-x86-64-avx2.exe" proto=uci option.UCI_LimitStrength=true option.UCI_Elo="350" st=0.1 timemargin=50 -engine name="Gemini Direct Use" cmd=C:\Users\ruby\projects\chessian\gemini_direct_engine.bat proto=uci st=60 stderr=gemini_err.log -pgnout match.pgn
 
 
  # 3^2 alpha beta with gemini vs. classic eval + moves
