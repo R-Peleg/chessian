@@ -33,11 +33,11 @@ CLASSIC_FEATURES_WEIGHTS = {
 def new_engine(mode, board):
     evaluator = Evaluator()
     # llm_evaluator = LLMEvaluator('Qwen/Qwen2.5-0.5B', 'cpu')
-    gem_heuristic = GeminiHeuristic('gemini-2.0-flash')
-    gem_moves_classic_eval = CompositeHeuristic(
-        pos_eval_heuristic=WeightedFeaturesHeuristic(),
-        top_moves_heuristic=gem_heuristic
-    )
+    # gem_heuristic = GeminiHeuristic('gemini-2.0-flash')
+    # gem_moves_classic_eval = CompositeHeuristic(
+    #     pos_eval_heuristic=WeightedFeaturesHeuristic(),
+    #     top_moves_heuristic=gem_heuristic
+    # )
     if mode == 'ab_classic_features':
         stockfish_path = "C:\\Users\\ruby\\chess\\stockfish-15-1.exe"
         stockfish = chess.engine.SimpleEngine.popen_uci(stockfish_path)
@@ -47,7 +47,7 @@ def new_engine(mode, board):
                 weights=CLASSIC_FEATURES_WEIGHTS
             ),
             top_moves_heuristic=evaluator
-        ), k=7, depth=4),
+        ), k=7, depth=4)
     engines = {
         'random': RandomEngine(board, evaluator),
         'mcts': MCTSEngine(board, evaluator),
