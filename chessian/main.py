@@ -5,6 +5,7 @@ from random_engine import RandomEngine
 from mcts_engine import MCTSEngine
 from direct_engine import DirectEngine
 from alpha_beta_engine import AlphaBetaEngine
+from full_alpha_beta_engine import FullAlphaBetaEngine
 # from llm_evaluator import LLMEvaluator
 # from gemini_evaluator import GeminiEvaluator
 from gemini_heuristic import GeminiHeuristic
@@ -41,13 +42,10 @@ def new_engine(mode, board):
     if mode == 'ab_classic_features':
         stockfish_path = "C:\\Users\\ruby\\chess\\stockfish-15-1.exe"
         stockfish = chess.engine.SimpleEngine.popen_uci(stockfish_path)
-        return AlphaBetaEngine(board, CompositeHeuristic(
-            pos_eval_heuristic=WeightedFeaturesHeuristic(
-                feature_evaluator=StockfishEvalFeatures(stockfish),
-                weights=CLASSIC_FEATURES_WEIGHTS
-            ),
-            top_moves_heuristic=evaluator
-        ), k=7, depth=4)
+        return FullAlphaBetaEngine(board, WeightedFeaturesHeuristic(
+            feature_evaluator=StockfishEvalFeatures(stockfish),
+            weights=CLASSIC_FEATURES_WEIGHTS
+        ), depth=10)
     engines = {
         'random': RandomEngine(board, evaluator),
         'mcts': MCTSEngine(board, evaluator),
@@ -99,17 +97,18 @@ def main():
                         board.push_uci(move)
             engine = new_engine(mode, board)
         elif cmd.startswith("go"):
-            movetime = 1.0
+            nodes = 10_000
             parts = cmd.split()
-            if 'movetime' in parts:
+            if 'nodes' in parts:
                 try:
-                    movetime_index = parts.index('movetime') + 1
-                    movetime = float(parts[movetime_index]) / 1000.0
+                    nodes_index = parts.index('nodes') + 1
+                    nodes = int(parts[nodes_index])
                 except (IndexError, ValueError):
                     pass
-            move = engine.get_best_move(time_limit=movetime)
+            
+            move = engine.get_best_move(max_nodes=nodes)
             score = engine.evaluate_position() if hasattr(engine, 'evaluate_position') else 0
-            print(f"info score cp {score}")
+            print(f"info score cp {int(score * 100)}")
             print(f"bestmove {move.uci()}")
 
 if __name__ == "__main__":
