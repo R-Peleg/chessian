@@ -1,8 +1,8 @@
 """
 full moves alpha beta engine, based on evaluation only
 """
-
 import chess
+MATE_SCORE = 1000000
 
 
 class FullAlphaBetaEngine:
@@ -32,6 +32,11 @@ class FullAlphaBetaEngine:
         """
         self.nodes_evaluated += 1
         if self.nodes_evaluated >= self.max_nodes:
+            return None, 0
+        
+        if self.board.is_checkmate():
+            return None, -MATE_SCORE if self.board.turn == chess.WHITE else MATE_SCORE
+        elif self.board.is_stalemate() or self.board.is_insufficient_material():
             return None, 0
 
         if depth == 0:
