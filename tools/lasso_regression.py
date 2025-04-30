@@ -61,16 +61,15 @@ def main():
     # Use 'evaluation' as the target column
     target = merged['evaluation']
     feature_cols = [col for col in features_df.columns if col != 'position_id']
-    feature_cols = []
     add_features_cols = [col for col in additional_features_df.columns if col != 'position_id']
     # add_features_cols = ['Material']
-    added_featuree_scale = 1
+    added_featuree_scale = 1000
     X = pd.concat([merged[feature_cols], merged[add_features_cols] / added_featuree_scale], axis=1) * 100
     y = target
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=args.test_size, random_state=42)
 
-    lasso = Lasso(alpha=100, positive=True)
+    lasso = Lasso(alpha=1, positive=True)
     lasso.fit(X_train, y_train)
 
     print('Feature weights:')
@@ -78,7 +77,7 @@ def main():
     for name, coef in zip(feature_cols + add_features_cols, lasso.coef_):
         if name in add_features_cols:
             coef /= added_featuree_scale
-        print(f'    "{name}": {coef}')
+        print(f'    "{name}": {coef},')
     print("}")
 
     preds = lasso.predict(X_test)
