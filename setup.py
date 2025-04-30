@@ -6,7 +6,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         'transformers==4.51.1',
-        'chess==1.9.3',
+        'chess==1.11.2',
         'requests==2.31.0',
     ],
     entry_points={
