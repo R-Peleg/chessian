@@ -12,7 +12,8 @@ from gemini_heuristic import GeminiHeuristic
 from composite_heuristic import CompositeHeuristic
 from weighted_features_heuristic import WeightedFeaturesHeuristic
 from feature_extraction.stockfish_eval_features import StockfishEvalFeatures
-
+from feature_extraction.gemini_eval_features import GeminiEvalFeatures
+from feature_extraction.composite_features import CompositeFeatureExtractor
 
 # Weights found by lasso regression
 CLASSIC_FEATURES_WEIGHTS = {
@@ -31,6 +32,26 @@ CLASSIC_FEATURES_WEIGHTS = {
     "Winnable": 0.0
 }
 
+HYBRID_FEATURES_WEIGHTS = {
+    "material": 0.0,
+    "pawn_structure": 0.12149655354134242,
+    "mobility": 0.3393729906043462,
+    "king_safety": 0.0,
+    "Material": 0.6296413122802713,
+    "Imbalance": 0.0,
+    "Pawns": 0.0,
+    "Knights": 0.0,
+    "Bishops": 0.0,
+    "Rooks": 0.0,
+    "Queens": 0.0,
+    "Mobility": 0.0,
+    "King safety": 0.019585003130121004,
+    "Threats": 0.0,
+    "Passed": 0.0,
+    "Space": 0.0,
+    "Winnable": 0.0,
+}
+
 def new_engine(mode, board):
     evaluator = Evaluator()
     # llm_evaluator = LLMEvaluator('Qwen/Qwen2.5-0.5B', 'cpu')
@@ -39,12 +60,22 @@ def new_engine(mode, board):
     #     pos_eval_heuristic=WeightedFeaturesHeuristic(),
     #     top_moves_heuristic=gem_heuristic
     # )
+    stockfish_path = "C:\\Users\\ruby\\chess\\stockfish-15-1.exe"
     if mode == 'ab_classic_features':
-        stockfish_path = "C:\\Users\\ruby\\chess\\stockfish-15-1.exe"
         stockfish = chess.engine.SimpleEngine.popen_uci(stockfish_path)
         return FullAlphaBetaEngine(board, WeightedFeaturesHeuristic(
             feature_evaluator=StockfishEvalFeatures(stockfish),
             weights=CLASSIC_FEATURES_WEIGHTS
+        ), depth=10)
+    elif mode == 'ab_hybrid_features':
+        stockfish = chess.engine.SimpleEngine.popen_uci(stockfish_path)
+        feature_extractor = CompositeFeatureExtractor([
+            StockfishEvalFeatures(stockfish),
+            GeminiEvalFeatures('gemma-3-27b-it')
+        ])
+        return FullAlphaBetaEngine(board, WeightedFeaturesHeuristic(
+            feature_evaluator=feature_extractor,
+            weights=HYBRID_FEATURES_WEIGHTS
         ), depth=10)
     engines = {
         'random': RandomEngine(board, evaluator),
