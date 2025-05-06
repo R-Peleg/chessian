@@ -31,14 +31,22 @@ class GeminiEvalFeatures:
         board = chess.Board(board_fen)
         prompt = f"""
 You are an expert chess analyst.
-Given the following position FEN: {board_fen}
-Evaluate it, write your evaluation with the following JSON:
-{{"material": <float>, "pawn_structure": <float>, "mobility": <float>, 'king_safety': <float>}}
+Given the following position FEN: {board_fen}, 
+Evaluate it, and then end your evaluation with the following JSON:
+{{"material": <float>, "pawn_structure": <float>, "mobility": <float>, 'king_safety': <float>, "tempo": <float>, "knight_position": <float>, "bishop_position": <float>, "queen_position": <float>, "piece_coordination": <float>, "threats": <float>, "rizz": <float>, "total": <float>}}
 Where:
-Material represents the piece count advantage for white
-Pawns represents the pawn structure advantage for white
-Mobility represents the piece development and mobility advantage for white
-King Safety represents the king safety advantage for white
+material represents the piece count advantage for white.
+pawn_structure represents the pawn structure advantage for white.
+mobility represents the piece development and mobility advantage for white.
+king_safety represents the king safety advantage for white.
+tempo represents the tempo advantage for white.
+knight_position represents the knight position advantage for white (0 if there are no knights).
+bishop_position represents the bishop position advantage for white (0 if there are no bishops).
+queen_position represents the queen position advantage for white (0 if there are no queens).
+piece_coordination represents the piece coordination, how the different pieces act together, advantage for white.
+threats represents the immidiate and medium term threats advantage for white.
+rizz represent how much you as an exprt analyst like the position.
+total is the conclusion of the evaluation overall.
 Advantage for black is respresented by negative score.
 """
         
@@ -65,6 +73,14 @@ Advantage for black is respresented by negative score.
                     continue
                 else:
                     raise ValueError(f"Error calling Gemini API, i={i}, slept {total_slept_time} seconds.") from e
+            except genai.errors.ServerError as e:
+                if i < 3:
+                    retry_time = 5 * (2 ** i)
+                    time.sleep(retry_time)
+                    total_slept_time += retry_time
+                    continue
+                else:
+                    raise ValueError(f"Server error calling Gemini API, i={i}, slept {total_slept_time} seconds.") from e
 
         json_text = response.text.strip()
         start = json_text.find('{')
