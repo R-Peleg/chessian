@@ -38,16 +38,16 @@ mobility: Freedom and activity of pieces, including development.
 king_safety: Relative safety of each king.
 tempo: Initiative or pressure advantage (e.g., forcing moves, threats).
 total: Conclusion of the evaluation overall.
-Advantage for White should be represented with positive values; advantage for Black with negative values. Score of 1.00 is equivalent to 1 pawn advantage.
+Advantage for White should be represented with positive values; advantage for Black with negative values. Score of 1.00 is equivalent to 1 pawn advantage for white, and score of -1.00 is equivalent to 1 pawn advantage to black.
 **Keep your explanation very short (1 - 2 sentences), followed immediately by the JSON output.**
 End your evaluation with the following JSON structure:
 {{
-    "material": <number>,
-    "pawn_structure": <number>,
-    "mobility": <number>,
-    "king_safety": <number>,
-    "tempo": <number>,
-    "total": <number>
+    "material": <float>,
+    "pawn_structure": <float>,
+    "mobility": <float>,
+    "king_safety": <float>,
+    "tempo": <float>,
+    "total": <float>
 }}
 """
         total_slept_time = 0
