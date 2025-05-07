@@ -28,28 +28,28 @@ class GeminiEvalFeatures:
 
     @lru_cache(maxsize=128)
     def call_gemini(self, board_fen: str) -> dict:
-        board = chess.Board(board_fen)
         prompt = f"""
 You are an expert chess analyst.
-Given the following position FEN: {board_fen}, 
-Evaluate it, and then end your evaluation with the following JSON:
-{{"material": <float>, "pawn_structure": <float>, "mobility": <float>, 'king_safety': <float>, "tempo": <float>, "knight_position": <float>, "bishop_position": <float>, "queen_position": <float>, "piece_coordination": <float>, "threats": <float>, "rizz": <float>, "total": <float>}}
-Where:
-material represents the piece count advantage for white.
-pawn_structure represents the pawn structure advantage for white.
-mobility represents the piece development and mobility advantage for white.
-king_safety represents the king safety advantage for white.
-tempo represents the tempo advantage for white.
-knight_position represents the knight position advantage for white (0 if there are no knights).
-bishop_position represents the bishop position advantage for white (0 if there are no bishops).
-queen_position represents the queen position advantage for white (0 if there are no queens).
-piece_coordination represents the piece coordination, how the different pieces act together, advantage for white.
-threats represents the immidiate and medium term threats advantage for white.
-rizz represent how much you as an exprt analyst like the position.
-total is the conclusion of the evaluation overall.
-Advantage for black is respresented by negative score.
+Given the following chess position FEN: {board_fen}, 
+Your evaluation should consider the following five factors, each scored as a numeric value
+material: Piece count and quality advantage.
+pawn_structure: Strength and stability of pawn formations.
+mobility: Freedom and activity of pieces, including development.
+king_safety: Relative safety of each king.
+tempo: Initiative or pressure advantage (e.g., forcing moves, threats).
+total: Conclusion of the evaluation overall.
+Advantage for White should be represented with positive values; advantage for Black with negative values. Score of 1.00 is equivalent to 1 pawn advantage.
+**Keep your explanation very short (1 - 2 sentences), followed immediately by the JSON output.**
+End your evaluation with the following JSON structure:
+{{
+    "material": <number>,
+    "pawn_structure": <number>,
+    "mobility": <number>,
+    "king_safety": <number>,
+    "tempo": <number>,
+    "total": <number>
+}}
 """
-        
         total_slept_time = 0
         for i in range(4):
             try:

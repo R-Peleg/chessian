@@ -36,7 +36,7 @@ def main():
         df = pd.DataFrame(dataset[default_split])
 
     if args.llm:
-        extractor = GeminiEvalFeatures("gemma-3-4b-it")
+        extractor = GeminiEvalFeatures("gemma-3-1b-it")
         features_list = extract_features_for_dataset(df, extractor)
     else:
         with chess.engine.SimpleEngine.popen_uci(args.stockfish) as stockfish:
