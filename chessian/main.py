@@ -12,45 +12,27 @@ from gemini_heuristic import GeminiHeuristic
 from composite_heuristic import CompositeHeuristic
 from weighted_features_heuristic import WeightedFeaturesHeuristic
 from feature_extraction.stockfish_eval_features import StockfishEvalFeatures
+from feature_extraction.simple_feature_extractor import SimpleFeatures
 from feature_extraction.gemini_eval_features import GeminiEvalFeatures
 from feature_extraction.composite_features import CompositeFeatureExtractor
 
 # Weights found by lasso regression
 CLASSIC_FEATURES_WEIGHTS = {
-    "Material": 0.6638062211120966,
-    "Imbalance": 0.0,
-    "Pawns": 0.9527885652092388,
-    "Knights": 0.0,
-    "Bishops": 0.14680968691215993,
-    "Rooks": 0.0,
-    "Queens": 0.0,
-    "Mobility": 0.8271389978937992,
-    "King safety": 0.45246437022494507,
-    "Threats": 1.1228572943646506,
-    "Passed": 0.7253141087156784,
-    "Space": 0.0,
-    "Winnable": 0.0
+    'material_simple': 0.765,
+    'mobility_simple': 0.036
 }
 
 HYBRID_FEATURES_WEIGHTS = {
-    "material": 0.0,
-    "pawn_structure": 0.12149655354134242,
-    "mobility": 0.3393729906043462,
-    "king_safety": 0.0,
-    "Material": 0.6296413122802713,
-    "Imbalance": 0.0,
-    "Pawns": 0.0,
-    "Knights": 0.0,
-    "Bishops": 0.0,
-    "Rooks": 0.0,
-    "Queens": 0.0,
-    "Mobility": 0.0,
-    "King safety": 0.019585003130121004,
-    "Threats": 0.0,
-    "Passed": 0.0,
-    "Space": 0.0,
-    "Winnable": 0.0,
+    'material_simple' : 0.781, 
+    'mobility_simple' : 0.033, 
+    'pawn_structure' : 0.597, 
+    'mobility' : 0.423, 
+    'material' : 0.092, 
+    'king_safety' : 0.049, 
+    'tempo' : 0.000,
+    'total' : 0.000,
 }
+
 
 def new_engine(mode, board):
     evaluator = Evaluator()
@@ -60,17 +42,14 @@ def new_engine(mode, board):
     #     pos_eval_heuristic=WeightedFeaturesHeuristic(),
     #     top_moves_heuristic=gem_heuristic
     # )
-    stockfish_path = "C:\\Users\\ruby\\chess\\stockfish-15-1.exe"
     if mode == 'ab_classic_features':
-        stockfish = chess.engine.SimpleEngine.popen_uci(stockfish_path)
         return FullAlphaBetaEngine(board, WeightedFeaturesHeuristic(
-            feature_evaluator=StockfishEvalFeatures(stockfish),
+            feature_evaluator=SimpleFeatures(),
             weights=CLASSIC_FEATURES_WEIGHTS
         ), depth=10)
     elif mode == 'ab_hybrid_features':
-        stockfish = chess.engine.SimpleEngine.popen_uci(stockfish_path)
         feature_extractor = CompositeFeatureExtractor([
-            StockfishEvalFeatures(stockfish),
+            SimpleFeatures(),
             GeminiEvalFeatures('gemma-3-27b-it')
         ])
         return FullAlphaBetaEngine(board, WeightedFeaturesHeuristic(
