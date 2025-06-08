@@ -40,6 +40,14 @@ HYBRID_FEATURES_WEIGHTS = {
     'total' : 0.000,
 }
 
+def score_to_classification(score):
+    if score > 2.0:
+        return 'white'
+    elif score < -2.0:
+        return 'black'
+    else:
+        return 'equal'
+
 def main():
     if not os.path.exists(DF_NAME):
         with open(FILENAME, "r") as f:
@@ -73,13 +81,6 @@ def main():
                 }
             )
             score2 = heuristic2.evaluate_position(position)
-            def score_to_classification(score):
-                if score > 2.0:
-                    return 'white'
-                elif score < -2.0:
-                    return 'black'
-                else:
-                    return 'equal'
 
             gemini_features = gemini_feature_extractor.get_features(position)
             gemini_direct_score = gemini_evaluator.evaluate_position(position)
@@ -106,12 +107,12 @@ def main():
         num_correct = sum(
             dataset_df['gt_classification'] == dataset_df[pred_col_name])
         return num_correct / dataset_size
-    accuracy_classic_reg = accuracy_of('classic_reg_classification')
-    print(f'Classic features accuracy: {accuracy_classic_reg:.2%}')
-    accuracy_classic = accuracy_of('classic_classification')
-    print(f'Classic features accuracy (1.0 weights): {accuracy_classic:.2%}')
-    accuracy_hybrid_reg = accuracy_of('hybrid_reg_classification')
-    print(f'Hybrid features accuracy: {accuracy_hybrid_reg:.2%}')
+    accuracy_direct_gemini = accuracy_of('gemini_direct_classification')
+    print(f"Accuracy of Gemini direct evaluation: {accuracy_direct_gemini:.4f}")
+    eval_score = 0.613 * dataset_df['gemini_feature_mobility'] + 0.336 * dataset_df['gemini_feature_pawn_structure'] + 0.027 * dataset_df['gemini_feature_material'] + 0.000 * dataset_df['gemini_feature_king_safety'] + 0.000 * dataset_df['gemini_feature_tempo'] + 0.000 * dataset_df['gemini_feature_total']
+    dataset_df['gemini_regression'] = eval_score.apply(score_to_classification)
+    accuracy_gemini_regression = accuracy_of('gemini_regression')
+    print(f"Accuracy of Gemini regression evaluation: {accuracy_gemini_regression:.4f}")
 
 
 if __name__ == "__main__":
