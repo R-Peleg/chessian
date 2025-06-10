@@ -29,8 +29,7 @@ class GeminiEvalFeatures:
     @lru_cache(maxsize=128)
     def call_gemini(self, board_fen: str) -> dict:
         prompt = f"""
-You are an expert chess analyst.
-Given the following chess position FEN: {board_fen}, 
+You are an expert chess analyst, tasked with evaluating a chess position.
 Your evaluation should consider the following five factors, each scored as a numeric value
 material: Piece count and quality advantage.
 pawn_structure: Strength and stability of pawn formations.
@@ -49,6 +48,7 @@ End your evaluation with the following JSON structure:
     "tempo": <float>,
     "total": <float>
 }}
+The chess position is given in FEN format: {board_fen}
 """
         total_slept_time = 0
         for i in range(4):

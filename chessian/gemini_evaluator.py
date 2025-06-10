@@ -58,21 +58,20 @@ class GeminiEvaluator:
     @lru_cache(maxsize=128)
     def call_gemini(self, board_fen: str, last_move_san: Optional[str] = None) -> dict:
         prompt = f"""
-You are an expert chess analyst.
-Given the following chess position FEN: {board_fen}, 
+You are an expert chess analyst, tasked with evaluating a chess position.
 Your evaluation should consider the following five factors:
 material: Piece count and quality advantage.
 pawn_structure: Strength and stability of pawn formations.
 mobility: Freedom and activity of pieces, including development.
 king_safety: Relative safety of each king.
 tempo: Initiative or pressure advantage (e.g., forcing moves, threats).
-total: Conclusion of the evaluation overall.
 Advantage for White should be represented with positive values; advantage for Black with negative values. Score of 1.00 is equivalent to 1 pawn advantage for white, and score of -1.00 is equivalent to 1 pawn advantage to black.
 **Keep your explanation very short (1 - 2 sentences), followed immediately by the JSON output.**
 End your evaluation with the following JSON structure:
 {{
     "score": <float>
 }}
+The chess position is given in FEN format: {board_fen}
 """
         total_slept_time = 0
         for i in range(4):
